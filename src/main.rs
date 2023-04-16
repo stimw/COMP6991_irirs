@@ -3,7 +3,11 @@ use iris_lib::{
     connect::{ConnectionError, ConnectionManager},
     types::SERVER_NAME,
 };
+use simple_logger::SimpleLogger;
 use std::net::IpAddr;
+
+#[macro_use]
+extern crate log;
 
 #[derive(Parser)]
 struct Arguments {
@@ -15,8 +19,14 @@ struct Arguments {
 }
 
 fn main() {
+    SimpleLogger::new()
+        .env()
+        .with_local_timestamps()
+        .init()
+        .unwrap();
+
     let arguments = Arguments::parse();
-    println!(
+    info!(
         "Launching {} at {}:{}",
         SERVER_NAME, arguments.ip_address, arguments.port
     );
@@ -26,26 +36,26 @@ fn main() {
         // This function call will block until a new client connects!
         let (mut conn_read, mut conn_write) = connection_manager.accept_new_connection();
 
-        println!("New connection from {}", conn_read.id());
+        info!("New connection from {}", conn_read.id());
 
         loop {
-            println!("Waiting for message...");
+            debug!("Waiting for message...");
             let message = match conn_read.read_message() {
                 Ok(message) => message,
                 Err(ConnectionError::ConnectionLost | ConnectionError::ConnectionClosed) => {
-                    println!("Lost connection.");
+                    warn!("Lost connection.");
                     break;
                 }
                 Err(_) => {
-                    println!("Invalid message received... ignoring message.");
+                    debug!("Invalid message received... ignoring message.");
                     continue;
                 }
             };
 
-            println!("Received message: {message}");
+            debug!("Received message: {message}");
 
             let _ = conn_write.write_message("Hello, World!\r\n");
-            println!("Sent hello-world message back!");
+            debug!("Sent hello-world message back!");
         }
     }
 }
