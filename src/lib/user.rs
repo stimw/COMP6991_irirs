@@ -88,6 +88,10 @@ impl User {
         self.joined_channels.push(channel_name.to_owned());
     }
 
+    pub fn quit_channel(&mut self, channel_name: &str) {
+        self.joined_channels.retain(|name| name != channel_name);
+    }
+
     pub fn get_joined_channels(&self) -> &Vec<String> {
         &self.joined_channels
     }

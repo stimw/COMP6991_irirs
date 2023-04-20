@@ -1,7 +1,7 @@
 use crate::{
-    channel_list::ChannelList,
+    channel_list::{self, ChannelList},
     connect::ConnectionWrite,
-    types::{self, ErrorType, Nick, NickMsg, Reply, WelcomeReply},
+    types::{self, ErrorType, Nick, NickMsg, Reply, WelcomeReply, QuitReply},
     user::UserList,
 };
 
@@ -29,6 +29,9 @@ pub fn global_msg_handler(
         }
         types::Message::Ping(ping_msg) => {
             ping_msg_handler(user_list, ping_msg, parsed_msg.sender_nick)
+        }
+        types::Message::Quit(quit_msg) => {
+            quit_msg_handler(user_list, channel_list, quit_msg, parsed_msg.sender_nick)
         }
         _ => Ok(()),
     }
@@ -102,6 +105,47 @@ fn ping_msg_handler(
     if user.is_set_nick() && user.is_set_real_name() {
         user.send(Reply::Pong(ping_msg));
     }
+
+    Ok(())
+}
+
+fn quit_msg_handler(
+    user_list: &mut UserList,
+    channel_list: &mut ChannelList,
+    quit_msg: types::QuitMsg,
+    sender_nick: Nick,
+) -> Result<(), ErrorType> {
+    let users = user_list.get_users();
+    let mut users = users.lock().unwrap();
+    let user = users
+        .iter_mut()
+        .find(|user| user.get_nick() == sender_nick)
+        .unwrap();
+
+    let channels = user.get_joined_channels().clone();
+
+    // send quit message to all channels
+    for channel_str in channels {
+        let channel_users = channel_list.get_users_mut(&channel_str).unwrap();
+
+        for other_user_nick in &mut *channel_users {
+            let other_user = users
+                .iter_mut()
+                .find(|user| user.get_nick() == Nick(other_user_nick.clone()))
+                .unwrap();
+
+            other_user.send(Reply::Quit(QuitReply {
+                message: quit_msg.clone(),
+                sender_nick: sender_nick.clone(),
+            }));
+        }
+
+        // remove user from channel
+        channel_users.retain(|user_nick| user_nick != &sender_nick.0);
+    }
+
+    // remove user from user list
+    users.retain(|user| user.get_nick() != sender_nick);
 
     Ok(())
 }

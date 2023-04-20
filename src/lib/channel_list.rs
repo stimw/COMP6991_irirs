@@ -38,7 +38,7 @@ impl ChannelList {
         self.channels.insert(channel_name, Vec::new());
     }
 
-    pub fn get_channel_mut(&mut self, channel_name: &str) -> Option<&mut Vec<String>> {
+    pub fn get_users_mut(&mut self, channel_name: &str) -> Option<&mut Vec<String>> {
         self.channels.get_mut(channel_name)
     }
 
@@ -47,8 +47,8 @@ impl ChannelList {
             self.add_channel(channel_name.to_owned());
         }
 
-        let channel = self.get_channel_mut(channel_name).unwrap();
-        channel.push(user_id.to_owned());
+        let channel_users = self.get_users_mut(channel_name).unwrap();
+        channel_users.push(user_id.to_owned());
     }
 
     pub fn quit_channel(&mut self, channel_name: &str, user_id: &str) {
@@ -56,13 +56,13 @@ impl ChannelList {
             return;
         }
 
-        let channel = self.get_channel_mut(channel_name).unwrap();
-        channel.retain(|id| id != user_id);
+        let channel_users = self.get_users_mut(channel_name).unwrap();
+        channel_users.retain(|id| id != user_id);
     }
 
     pub fn remove_user(&mut self, user_id: &str) {
-        for (_, channel) in self.channels.iter_mut() {
-            channel.retain(|id| id != user_id);
+        for (_, channel_users) in self.channels.iter_mut() {
+            channel_users.retain(|id| id != user_id);
         }
     }
 }

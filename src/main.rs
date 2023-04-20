@@ -3,7 +3,7 @@ use iris_lib::{
     channel_list::ChannelList,
     connect::{ConnectionError, ConnectionManager},
     massage_handler::{error_msg_handler, global_msg_handler},
-    types::{ErrorType, Nick, ParsedMessage, UnparsedMessage, SERVER_NAME},
+    types::{ErrorType, Nick, ParsedMessage, UnparsedMessage, SERVER_NAME, Message},
     user::{User, UserList},
 };
 use simple_logger::SimpleLogger;
@@ -106,14 +106,8 @@ fn main() {
                     // Get the user's nick by id
                     let users = user_list.get_users();
                     let users = users.lock().unwrap();
-                    let user_nick = match users.iter().find(|user| user.get_id() == conn_read.id())
-                    {
-                        Some(user) => user.get_nick(),
-                        None => {
-                            warn!("User not found!");
-                            Nick(conn_read.id())
-                        }
-                    };
+                    let user = users.iter().find(|user| user.get_id() == conn_read.id()).unwrap();
+                    let user_nick = user.get_nick();
 
                     // Parse the message
                     let parsed_msg = match ParsedMessage::try_from(UnparsedMessage {
@@ -130,7 +124,16 @@ fn main() {
 
                     debug!("Parsed message: {:?}", parsed_msg);
 
-                    sender.send(Ok(parsed_msg)).unwrap();
+                    sender.send(Ok(parsed_msg.clone())).unwrap();
+
+                    // Check if the user is quitting
+                    // If so, quit the thread
+                    if let Message::Quit(_) = parsed_msg.message {
+                        // Check if the user has a nick and a real name
+                        if user.is_set_nick() && user.is_set_real_name() {
+                            break;
+                        }
+                    }
                 }
             });
         }
