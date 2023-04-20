@@ -1,0 +1,57 @@
+use crate::{
+    channel_list::ChannelList,
+    connect::ConnectionWrite,
+    types::{self, ErrorType},
+    user::UserList,
+};
+
+pub fn error_msg_handler(err: types::ErrorType, user_list: &UserList, sender_nick: types::Nick) {
+    let users = user_list.get_users();
+    let mut users = users.lock().unwrap();
+    let user = users
+        .iter_mut()
+        .find(|user| user.get_nick() == sender_nick)
+        .unwrap();
+    user.send_back_error(err);
+}
+
+pub fn global_msg_handler(
+    user_list: &mut UserList,
+    channel_list: &mut ChannelList,
+    parsed_msg: types::ParsedMessage,
+) -> Result<(), ErrorType> {
+    match parsed_msg.message {
+        types::Message::Nick(nick_msg) => {
+            nick_msg_handler(user_list, nick_msg, parsed_msg.sender_nick)
+        }
+        _ => Ok(()),
+    }
+}
+
+fn nick_msg_handler(
+    user_list: &mut UserList,
+    nick_msg: types::NickMsg,
+    user_id_as_nick: types::Nick,
+) -> Result<(), ErrorType> {
+    let nick = nick_msg.nick;
+
+    let users = user_list.get_users();
+    let mut users = users.lock().unwrap();
+
+    // Check if nick exists and if it does, return an error
+    if users.iter().any(|user| user.get_nick() == nick) {
+        return Err(ErrorType::NickCollision);
+    }
+
+    // Find the user by user id
+    let user = users
+        .iter_mut()
+        .find(|user| user.get_id() == user_id_as_nick.0)
+        .unwrap();
+    // Check if the nick is valid, if not, return an error
+    let nick = types::Nick::try_from(nick.0)?;
+    // Set the nick
+    user.set_nick(nick.0);
+
+    Ok(())
+}
