@@ -18,6 +18,8 @@ pub enum ErrorType {
 /// the server should be listed as from this name.
 pub const SERVER_NAME: &str = "iris-server";
 
+impl std::error::Error for ErrorType {}
+
 impl std::fmt::Display for ErrorType {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         match *self {

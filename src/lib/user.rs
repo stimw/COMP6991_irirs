@@ -2,6 +2,7 @@ use crate::{
     connect::ConnectionWrite,
     types::{ErrorType, Nick, Reply},
 };
+use anyhow::{Result, anyhow};
 use std::{
     fmt::Debug,
     sync::{Arc, Mutex},
@@ -72,16 +73,17 @@ impl User {
         self.real_name.is_some()
     }
 
-    pub fn send(&mut self, reply: Reply) {
-        self.connection_write
-            .write_message(&format!("{}", reply))
-            .unwrap();
+    pub fn send(&mut self, reply: Reply) -> Result<()> {
+        self.connection_write.write_message(&format!("{}", reply))?;
+
+        Ok(())
     }
 
-    pub fn send_back_error(&mut self, err: ErrorType) {
+    pub fn send_back_error(&mut self, err: ErrorType) -> Result<()> {
         self.connection_write
-            .write_message(&format!("{}\r\n", err))
-            .unwrap();
+            .write_message(&format!("{}\r\n", err))?;
+
+        Ok(())
     }
 
     pub fn join_channel(&mut self, channel_name: &str) {
@@ -123,16 +125,7 @@ impl UserList {
     }
 
     pub fn add_user(&mut self, user: User) {
-        self.users.lock().unwrap().push(user);
-    }
-
-    pub fn remove_user(&mut self, user_id: &str) {
-        let mut users = self.users.lock().unwrap();
-        let index = users
-            .iter()
-            .position(|user| user.get_id() == user_id)
-            .unwrap();
-        users.remove(index);
+        self.users.lock().expect("Failed to lock users").push(user);
     }
 
     pub fn get_users(&self) -> Arc<Mutex<Vec<User>>> {

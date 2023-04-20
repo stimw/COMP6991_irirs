@@ -1,9 +1,10 @@
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use iris_lib::{
     channel_list::ChannelList,
     connect::{ConnectionError, ConnectionManager},
     massage_handler::{error_msg_handler, global_msg_handler},
-    types::{ErrorType, Nick, ParsedMessage, UnparsedMessage, SERVER_NAME, Message},
+    types::{ErrorType, Message, Nick, ParsedMessage, UnparsedMessage, SERVER_NAME},
     user::{User, UserList},
 };
 use simple_logger::SimpleLogger;
@@ -26,7 +27,7 @@ fn main() {
         .env()
         .with_local_timestamps()
         .init()
-        .unwrap();
+        .expect("Failed to initialize logger!");
 
     let arguments = Arguments::parse();
     info!(
@@ -62,6 +63,7 @@ fn main() {
                         }
                     }
                     Err((err, nick)) => {
+                        let err = anyhow!(err);
                         error!("Error when parsing message: {}", err);
                         error_msg_handler(err, &user_list, nick);
                     }
@@ -105,8 +107,11 @@ fn main() {
 
                     // Get the user's nick by id
                     let users = user_list.get_users();
-                    let users = users.lock().unwrap();
-                    let user = users.iter().find(|user| user.get_id() == conn_read.id()).unwrap();
+                    let users = users.lock().expect("Failed to lock users list!");
+                    let user = users
+                        .iter()
+                        .find(|user| user.get_id() == conn_read.id())
+                        .expect("Failed to find user!");
                     let user_nick = user.get_nick();
 
                     // Parse the message
@@ -116,7 +121,7 @@ fn main() {
                     }) {
                         Ok(parsed_msg) => parsed_msg,
                         Err(err) => {
-                            sender.send(Err((err, user_nick))).unwrap();
+                            sender.send(Err((err, user_nick))).expect("The channel is closed!");
                             debug!("Invalid message received... ignoring message.");
                             continue;
                         }
@@ -124,7 +129,7 @@ fn main() {
 
                     debug!("Parsed message: {:?}", parsed_msg);
 
-                    sender.send(Ok(parsed_msg.clone())).unwrap();
+                    sender.send(Ok(parsed_msg.clone())).expect("The channel is closed!");
 
                     // Check if the user is quitting
                     // If so, quit the thread
