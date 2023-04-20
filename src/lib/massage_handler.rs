@@ -1,11 +1,11 @@
 use crate::{
     channel_list::ChannelList,
     connect::ConnectionWrite,
-    types::{self, ErrorType},
+    types::{self, ErrorType, Nick, NickMsg, Reply, WelcomeReply},
     user::UserList,
 };
 
-pub fn error_msg_handler(err: types::ErrorType, user_list: &UserList, sender_nick: types::Nick) {
+pub fn error_msg_handler(err: ErrorType, user_list: &UserList, sender_nick: Nick) {
     let users = user_list.get_users();
     let mut users = users.lock().unwrap();
     let user = users
@@ -24,14 +24,17 @@ pub fn global_msg_handler(
         types::Message::Nick(nick_msg) => {
             nick_msg_handler(user_list, nick_msg, parsed_msg.sender_nick)
         }
+        types::Message::User(user_msg) => {
+            user_msg_handler(user_list, user_msg, parsed_msg.sender_nick)
+        }
         _ => Ok(()),
     }
 }
 
 fn nick_msg_handler(
     user_list: &mut UserList,
-    nick_msg: types::NickMsg,
-    user_id_as_nick: types::Nick,
+    nick_msg: NickMsg,
+    user_id_as_nick: Nick,
 ) -> Result<(), ErrorType> {
     let nick = nick_msg.nick;
 
@@ -46,12 +49,43 @@ fn nick_msg_handler(
     // Find the user by user id
     let user = users
         .iter_mut()
-        .find(|user| user.get_id() == user_id_as_nick.0)
+        .find(|user| {
+            if user.is_set_nick() {
+                user.get_nick() == user_id_as_nick
+            } else {
+                user.get_id() == user_id_as_nick.0
+            }
+        })
         .unwrap();
+
     // Check if the nick is valid, if not, return an error
-    let nick = types::Nick::try_from(nick.0)?;
+    let nick = Nick::try_from(nick.0)?;
     // Set the nick
     user.set_nick(nick.0);
+
+    Ok(())
+}
+
+fn user_msg_handler(
+    user_list: &mut UserList,
+    user_msg: types::UserMsg,
+    user_id_as_nick: Nick,
+) -> Result<(), ErrorType> {
+    let users = user_list.get_users();
+    let mut users = users.lock().unwrap();
+    let user = users
+        .iter_mut()
+        .find(|user| user.get_nick() == user_id_as_nick)
+        .unwrap();
+
+    if user.is_set_nick() && !user.is_set_real_name() {
+        user.set_real_name(user_msg.real_name);
+
+        user.send(Reply::Welcome(WelcomeReply {
+            target_nick: user.get_real_name(),
+            message: format!("Welcome to the server, {}!", user.get_real_name()),
+        }));
+    }
 
     Ok(())
 }
