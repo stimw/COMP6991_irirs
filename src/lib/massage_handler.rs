@@ -1,7 +1,7 @@
 use crate::{
     channel_list::{self, ChannelList},
     connect::ConnectionWrite,
-    types::{self, ErrorType, Nick, NickMsg, Reply, WelcomeReply, QuitReply},
+    types::{self, ErrorType, Nick, NickMsg, PrivMsg, QuitReply, Reply, WelcomeReply, Target},
     user::UserList,
 };
 
@@ -122,6 +122,10 @@ fn quit_msg_handler(
         .find(|user| user.get_nick() == sender_nick)
         .unwrap();
 
+    if !user.is_set_nick() || !user.is_set_real_name() {
+        return Ok(());
+    }
+
     let channels = user.get_joined_channels().clone();
 
     // send quit message to all channels
@@ -146,6 +150,45 @@ fn quit_msg_handler(
 
     // remove user from user list
     users.retain(|user| user.get_nick() != sender_nick);
+
+    Ok(())
+}
+
+fn private_msg_handler(
+    user_list: &mut UserList,
+    channel_list: &mut ChannelList,
+    priv_msg: PrivMsg,
+    sender_nick: Nick,
+) -> Result<(), ErrorType> {
+    let users = user_list.get_users();
+    let mut users = users.lock().unwrap();
+    let user = users
+        .iter_mut()
+        .find(|user| user.get_nick() == sender_nick)
+        .unwrap();
+
+    if !user.is_set_nick() || !user.is_set_real_name() { 
+        return Ok(());
+    }
+
+    match priv_msg.target {
+        Target::Channel(channel) => {
+            // error if channel does not exist
+            if !channel_list.has_channel(&channel.0) {
+                return Err(ErrorType::NoSuchChannel);
+            }
+
+            // ignore if user is not in channel
+            if !channel_list.has_user(&channel.0, &sender_nick.0) {
+                return Ok(());
+            }
+
+        }
+
+        Target::User(user_nick) => {
+
+        }
+    }
 
     Ok(())
 }
