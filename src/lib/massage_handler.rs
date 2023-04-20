@@ -27,6 +27,9 @@ pub fn global_msg_handler(
         types::Message::User(user_msg) => {
             user_msg_handler(user_list, user_msg, parsed_msg.sender_nick)
         }
+        types::Message::Ping(ping_msg) => {
+            ping_msg_handler(user_list, ping_msg, parsed_msg.sender_nick)
+        }
         _ => Ok(()),
     }
 }
@@ -49,13 +52,7 @@ fn nick_msg_handler(
     // Find the user by user id
     let user = users
         .iter_mut()
-        .find(|user| {
-            if user.is_set_nick() {
-                user.get_nick() == user_id_as_nick
-            } else {
-                user.get_id() == user_id_as_nick.0
-            }
-        })
+        .find(|user| user.get_nick() == user_id_as_nick)
         .unwrap();
 
     // Check if the nick is valid, if not, return an error
@@ -85,6 +82,25 @@ fn user_msg_handler(
             target_nick: user.get_real_name(),
             message: format!("Welcome to the server, {}!", user.get_real_name()),
         }));
+    }
+
+    Ok(())
+}
+
+fn ping_msg_handler(
+    user_list: &mut UserList,
+    ping_msg: String,
+    sender_nick: Nick,
+) -> Result<(), ErrorType> {
+    let users = user_list.get_users();
+    let mut users = users.lock().unwrap();
+    let user = users
+        .iter_mut()
+        .find(|user| user.get_nick() == sender_nick)
+        .unwrap();
+
+    if user.is_set_nick() && user.is_set_real_name() {
+        user.send(Reply::Pong(ping_msg));
     }
 
     Ok(())
