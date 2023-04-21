@@ -1,5 +1,8 @@
+//! This module contains the ChannelList struct which is used to 
+//! keep track of which users are in which channels.
 use std::collections::HashMap;
 
+/// This struct is used to keep track of which users are in which channels.
 pub struct ChannelList {
     channels: HashMap<String, Vec<String>>,
 }

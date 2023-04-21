@@ -1,3 +1,5 @@
+//! Types for the IRC protocol.
+
 /// All relevant IRC errors are listed here.
 /// See the assignment documentation for more information.
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]

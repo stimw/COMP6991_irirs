@@ -1,3 +1,7 @@
+//! User module
+//! 
+//! This module contains the User struct which is used to keep track of
+//! information about a user.
 use crate::{
     connect::ConnectionWrite,
     types::{ErrorType, Nick, Reply},
@@ -8,6 +12,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+/// This struct is used to keep track of information about a user.
 pub struct User {
     id: String,
     connection_write: ConnectionWrite,

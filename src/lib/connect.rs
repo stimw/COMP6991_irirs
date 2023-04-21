@@ -1,3 +1,4 @@
+//! This module contains the code for managing connections to clients.
 use std::{
     error::Error,
     fmt::{Debug, Display},

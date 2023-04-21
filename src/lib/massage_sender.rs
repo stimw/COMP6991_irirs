@@ -1,3 +1,4 @@
+//! This module contains the functions that send messages to the users.
 use crate::{
     channel_list::ChannelList,
     types::{
@@ -9,6 +10,7 @@ use crate::{
 use anyhow::{anyhow, Error, Result};
 use log::error;
 
+/// Send a message to a user.
 pub fn global_msg_sender(
     user_list: &mut UserList,
     channel_list: &mut ChannelList,
@@ -39,6 +41,7 @@ pub fn global_msg_sender(
     }
 }
 
+/// Handle error messages.
 pub fn error_msg_sender(err: Error, user_list: &UserList, sender_nick: Nick) {
     if let Some(err) = err.downcast_ref::<ErrorType>() {
         let users = user_list.get_users();
@@ -200,6 +203,7 @@ fn priv_msg_sender(
             }
 
             // Handle normal message
+
             let other_user_option = users.iter_mut().find(|user| user.get_nick() == user_nick);
 
             if let Some(other_user) = other_user_option {
