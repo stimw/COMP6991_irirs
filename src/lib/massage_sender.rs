@@ -4,7 +4,7 @@ use crate::{
         self, Channel, ErrorType, JoinMsg, JoinReply, Nick, NickMsg, PartMsg, PartReply, PrivMsg,
         PrivReply, QuitReply, Reply, Target, WelcomeReply,
     },
-    user::UserList,
+    user::UserList, plugin,
 };
 use anyhow::{anyhow, Error, Result};
 use log::error;
@@ -187,6 +187,34 @@ fn priv_msg_sender(
     }
 
     match priv_msg.target {
+        Target::User(user_nick) => {
+            // Handle plugin message
+            if user_nick.0.starts_with("use_plugin_") {
+                return plugin::plugin_handler(
+                    user_list,
+                    channel_list,
+                    user_nick,
+                    sender_nick,
+                    priv_msg.message.as_str(),
+                );
+            }
+
+            // Handle normal message
+            let other_user_option = users.iter_mut().find(|user| user.get_nick() == user_nick);
+
+            if let Some(other_user) = other_user_option {
+                other_user.send(Reply::PrivMsg(PrivReply {
+                    message: PrivMsg {
+                        target: Target::User(user_nick),
+                        message: priv_msg.message.clone(),
+                    },
+                    sender_nick: sender_nick.clone(),
+                }))?;
+            } else {
+                return Err(anyhow!(ErrorType::NoSuchNick));
+            }
+        }
+
         Target::Channel(channel) => {
             // error if channel does not exist
             if !channel_list.has_channel(&channel.0) {
@@ -215,22 +243,6 @@ fn priv_msg_sender(
                     },
                     sender_nick: sender_nick.clone(),
                 }))?;
-            }
-        }
-
-        Target::User(user_nick) => {
-            let other_user_option = users.iter_mut().find(|user| user.get_nick() == user_nick);
-
-            if let Some(other_user) = other_user_option {
-                other_user.send(Reply::PrivMsg(PrivReply {
-                    message: PrivMsg {
-                        target: Target::User(user_nick),
-                        message: priv_msg.message.clone(),
-                    },
-                    sender_nick: sender_nick.clone(),
-                }))?;
-            } else {
-                return Err(anyhow!(ErrorType::NoSuchNick));
             }
         }
     }

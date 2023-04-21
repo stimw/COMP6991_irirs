@@ -129,13 +129,18 @@ fn main() {
 
                     debug!("Parsed message: {:?}", parsed_msg);
 
+                    // Drop the lock before sending the message
+                    let is_registered = user.is_set_nick() && user.is_set_real_name();
+                    drop(users);
+
                     sender.send(Ok(parsed_msg.clone())).expect("The channel is closed!");
 
                     // Check if the user is quitting
                     // If so, quit the thread
                     if let Message::Quit(_) = parsed_msg.message {
                         // Check if the user has a nick and a real name
-                        if user.is_set_nick() && user.is_set_real_name() {
+                        if is_registered {
+                            info!("User {} has quit.", user_nick);
                             break;
                         }
                     }

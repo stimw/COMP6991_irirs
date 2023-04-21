@@ -12,6 +12,8 @@ pub enum ErrorType {
     NeedMoreParams = 461,
     NoSuchNick = 401,
     NoSuchChannel = 403,
+    // For Plugin
+    PluginCommandError = 500,
 }
 
 /// This is the name of your server, all messages originating from
@@ -53,6 +55,9 @@ impl std::fmt::Display for ErrorType {
             }
             ErrorType::NickCollision => {
                 write!(fmt, ":{SERVER_NAME} 436 :Nickname collision")
+            }
+            ErrorType::PluginCommandError => {
+                write!(fmt, ":{SERVER_NAME} 500 :Plugin invalid")
             }
         }
     }

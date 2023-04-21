@@ -56,12 +56,10 @@ impl User {
     }
 
     pub fn set_nick(&mut self, nick: String) {
-        println!("{} set nick to {}", self.get_id(), nick);
         self.nick = Some(nick);
     }
 
     pub fn set_real_name(&mut self, real_name: String) {
-        println!("{} set real name to {}", self.get_id(), real_name);
         self.real_name = Some(real_name);
     }
 
