@@ -1,6 +1,5 @@
 use crate::{
     channel_list::ChannelList,
-    connect::ConnectionWrite,
     types::{self, ErrorType, Nick, NickMsg, PrivMsg, QuitReply, Reply, Target, WelcomeReply, PrivReply, JoinMsg, JoinReply, Channel, PartMsg, PartReply},
     user::UserList,
 };
@@ -34,7 +33,6 @@ pub fn global_msg_sender(
         types::Message::Part(part_msg) => {
             part_msg_sender(user_list, channel_list, part_msg, parsed_msg.sender_nick)
         }
-        _ => Ok(()),
     }
 }
 
