@@ -66,3 +66,67 @@ impl ChannelList {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_channel() {
+        let mut channel_list = ChannelList::new();
+        channel_list.add_channel("channel1".to_string());
+
+        assert!(channel_list.has_channel("channel1"));
+        assert!(!channel_list.has_channel("channel2"));
+    }
+
+    #[test]
+    fn test_join_channel() {
+        let mut channel_list = ChannelList::new();
+        channel_list.join_channel("channel1", "user1");
+
+        assert!(channel_list.has_channel("channel1"));
+        assert!(channel_list.has_user("channel1", "user1"));
+    }
+
+    #[test]
+    fn test_part_channel() {
+        let mut channel_list = ChannelList::new();
+        channel_list.join_channel("channel1", "user1");
+        channel_list.join_channel("channel1", "user2");
+        channel_list.part_channel("channel1", "user1");
+
+        assert!(channel_list.has_channel("channel1"));
+        assert!(!channel_list.has_user("channel1", "user1"));
+        assert!(channel_list.has_user("channel1", "user2"));
+    }
+
+    #[test]
+    fn test_remove_user() {
+        let mut channel_list = ChannelList::new();
+        channel_list.join_channel("channel1", "user1");
+        channel_list.join_channel("channel2", "user1");
+        channel_list.remove_user("user1");
+
+        assert!(!channel_list.has_user("channel1", "user1"));
+        assert!(!channel_list.has_user("channel2", "user1"));
+    }
+
+    #[test]
+    fn test_has_channel() {
+        let mut channel_list = ChannelList::new();
+        channel_list.add_channel("channel1".to_string());
+
+        assert!(channel_list.has_channel("channel1"));
+        assert!(!channel_list.has_channel("channel2"));
+    }
+
+    #[test]
+    fn test_has_user() {
+        let mut channel_list = ChannelList::new();
+        channel_list.join_channel("channel1", "user1");
+
+        assert!(channel_list.has_user("channel1", "user1"));
+        assert!(!channel_list.has_user("channel1", "user2"));
+    }
+}

@@ -1,6 +1,9 @@
 use crate::{
     channel_list::ChannelList,
-    types::{self, ErrorType, Nick, NickMsg, PrivMsg, QuitReply, Reply, Target, WelcomeReply, PrivReply, JoinMsg, JoinReply, Channel, PartMsg, PartReply},
+    types::{
+        self, Channel, ErrorType, JoinMsg, JoinReply, Nick, NickMsg, PartMsg, PartReply, PrivMsg,
+        PrivReply, QuitReply, Reply, Target, WelcomeReply,
+    },
     user::UserList,
 };
 use anyhow::{anyhow, Error, Result};
@@ -216,9 +219,7 @@ fn priv_msg_sender(
         }
 
         Target::User(user_nick) => {
-            let other_user_option = users
-                .iter_mut()
-                .find(|user| user.get_nick() == user_nick);
+            let other_user_option = users.iter_mut().find(|user| user.get_nick() == user_nick);
 
             if let Some(other_user) = other_user_option {
                 other_user.send(Reply::PrivMsg(PrivReply {
