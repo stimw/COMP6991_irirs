@@ -51,7 +51,7 @@ impl ChannelList {
         channel_users.push(user_id.to_owned());
     }
 
-    pub fn quit_channel(&mut self, channel_name: &str, user_id: &str) {
+    pub fn part_channel(&mut self, channel_name: &str, user_id: &str) {
         if !self.has_channel(channel_name) {
             return;
         }

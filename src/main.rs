@@ -3,7 +3,7 @@ use clap::Parser;
 use iris_lib::{
     channel_list::ChannelList,
     connect::{ConnectionError, ConnectionManager},
-    massage_handler::{error_msg_handler, global_msg_handler},
+    massage_sender::{error_msg_sender, global_msg_sender},
     types::{ErrorType, Message, Nick, ParsedMessage, UnparsedMessage, SERVER_NAME},
     user::{User, UserList},
 };
@@ -54,18 +54,18 @@ fn main() {
                 match msg {
                     Ok(parsed_msg) => {
                         let sender_nick = parsed_msg.sender_nick.clone();
-                        match global_msg_handler(&mut user_list, &mut channel_list, parsed_msg) {
+                        match global_msg_sender(&mut user_list, &mut channel_list, parsed_msg) {
                             Ok(_) => debug!("Message handled successfully!"),
                             Err(err) => {
                                 error!("Error when handling message: {}", err);
-                                error_msg_handler(err, &user_list, sender_nick);
+                                error_msg_sender(err, &user_list, sender_nick);
                             }
                         }
                     }
                     Err((err, nick)) => {
                         let err = anyhow!(err);
                         error!("Error when parsing message: {}", err);
-                        error_msg_handler(err, &user_list, nick);
+                        error_msg_sender(err, &user_list, nick);
                     }
                 }
             }

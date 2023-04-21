@@ -2,7 +2,7 @@ use crate::{
     connect::ConnectionWrite,
     types::{ErrorType, Nick, Reply},
 };
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use std::{
     fmt::Debug,
     sync::{Arc, Mutex},
@@ -90,7 +90,7 @@ impl User {
         self.joined_channels.push(channel_name.to_owned());
     }
 
-    pub fn quit_channel(&mut self, channel_name: &str) {
+    pub fn part_channel(&mut self, channel_name: &str) {
         self.joined_channels.retain(|name| name != channel_name);
     }
 
