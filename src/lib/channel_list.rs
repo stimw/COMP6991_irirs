@@ -25,7 +25,8 @@ impl ChannelList {
         if !self.has_channel(channel_name) {
             return false;
         }
-
+        
+        // it's ok to use unwrap here because we already checked that the channel exists
         let channel = self.channels.get(channel_name).unwrap();
         channel.contains(&user_id.to_owned())
     }
@@ -47,6 +48,7 @@ impl ChannelList {
             self.add_channel(channel_name.to_owned());
         }
 
+        // it's ok to use unwrap here because we already checked that the channel exists
         let channel_users = self.get_users_mut(channel_name).unwrap();
         channel_users.push(user_id.to_owned());
     }
@@ -56,6 +58,7 @@ impl ChannelList {
             return;
         }
 
+        // it's ok to use unwrap here because we already checked that the channel exists
         let channel_users = self.get_users_mut(channel_name).unwrap();
         channel_users.retain(|id| id != user_id);
     }
