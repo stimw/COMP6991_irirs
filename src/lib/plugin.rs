@@ -45,8 +45,17 @@ pub fn plugin_handler(
 /// 
 /// This plugin just repeats the message.
 /// 
-/// For example, if you send "PRIVMSG use_plugin_sample :test",
-/// the plugin will send back "test" to the user.
+/// For example, if you send:
+/// 
+/// ```text
+/// PRIVMSG use_plugin_sample :test, test, test
+/// ```
+/// 
+/// The server will send:
+/// 
+/// ```text
+/// PRIVMSG <your nick> :test, test, test
+/// ```
 /// 
 /// You can use this plugin as a template to create your own plugins.
 pub fn use_plugin_sample(
