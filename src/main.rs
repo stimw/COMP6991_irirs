@@ -51,22 +51,18 @@ fn main() {
             let mut channel_list = ChannelList::new();
 
             for msg in receiver {
-                match msg {
-                    Ok(parsed_msg) => {
-                        let sender_nick = parsed_msg.sender_nick.clone();
-                        match global_msg_sender(&mut user_list, &mut channel_list, parsed_msg) {
-                            Ok(_) => debug!("Message handled successfully!"),
-                            Err(err) => {
-                                error!("Error when handling message: {}", err);
-                                error_msg_sender(err, &user_list, sender_nick);
-                            }
-                        }
+                if let Ok(parsed_msg) = msg {
+                    let sender_nick = parsed_msg.sender_nick.clone();
+                    if let Err(err) = global_msg_sender(&mut user_list, &mut channel_list, parsed_msg) {
+                        error!("Error when handling message: {}", err);
+                        error_msg_sender(err, &user_list, sender_nick);
+                    } else {
+                        debug!("Message handled successfully!");
                     }
-                    Err((err, nick)) => {
-                        let err = anyhow!(err);
-                        error!("Error when parsing message: {}", err);
-                        error_msg_sender(err, &user_list, nick);
-                    }
+                } else if let Err((err, nick)) = msg {
+                    let err = anyhow!(err);
+                    error!("Error when parsing message: {}", err);
+                    error_msg_sender(err, &user_list, nick);
                 }
             }
         });
