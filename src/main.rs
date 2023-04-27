@@ -25,7 +25,7 @@ struct Arguments {
 fn main() {
     SimpleLogger::new()
         .env()
-        .with_local_timestamps()
+        .with_utc_timestamps()
         .init()
         .expect("Failed to initialize logger!");
 
